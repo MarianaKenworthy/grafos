@@ -11,11 +11,11 @@
 	  Linhas seguintes: para cada aresta ou arco {vi , vj}, criar uma linha com o formato <vi> <vj> <peso>
 
   OBS:
-	 - <tipo> será G para grafo não dirigido e D para grafo dirigido  
+	  - <tipo> será G para grafo não dirigido e D para grafo dirigido  
 	  - <valorado> será 1 paragrafo valorado e 0 para grafo não valorado  
 	  - <peso> é opcional e só existirá para grafo ponderado  
 	  - Arestas ou arcos paralelos aparecerão mais de uma vez no arquivo   
-a 
+
 - Gerar um arquivo .txt contendo um grafo, com o formato definido em (a)
 - Converter de matriz de adjacências para lista de adjacências (e vice-versa)
 - Calcular e mostrar o grau de cada vértice

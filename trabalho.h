@@ -9,7 +9,7 @@ typedef struct grafoL {
     int numares;
     char tipo;
     int valorado;
-    NO* adjs;
+    NO** adjs;
 } GRAFOL;
 
 typedef struct grafoM {
@@ -20,14 +20,13 @@ typedef struct grafoM {
     int ** adjs;
 } GRAFOM;
 
-void fromFile;
-void toFile;
-GRAFOL* converteLista;
-GRAFOM* converteMatriz;
-void calculaGrau;
-void prettyPrint;
+GRAFOL* fromFile (); //feito
+void toFile (GRAFOL* grafo); //feito
+GRAFOL* toLista (GRAFOM* matriz); //feito
+GRAFOM* toMatriz;
+void calculaGrau (GRAFOL* grafo); //feito
 void geradoraMinima;
 void dijkstra;
-void buscaLength;
+int* buscaBreadth (GRAFOL* grafo, int vertFonte)//feito
 void buscaDepth;
 
