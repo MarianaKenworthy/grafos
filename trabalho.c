@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <limits.h>
 #include "trabalho.h"
-
+ 
 
 GRAFOL* fromFile () {
     char filename[30];
@@ -68,9 +68,9 @@ void toFile (GRAFOL* grafo) {
     NO aux;
     int vertAtual;
     
-    char buffer[5];
-//tem q ver isso aqui
-    sprintf(buffer, "%c%c%c%c\n", grafo->numvert, grafo->numares, grafo -> tipo, grafo->valorado);
+    char buffer[sizeof(int)*5];
+
+    sprintf(buffer, "%d%d%d%d\n", grafo->numvert, grafo->numares, grafo -> tipo, grafo->valorado);
     fwrite(buffer, sizeof(buffer), 1, output);
 
     for (int i=0; i <grafo->numvert; i++){
@@ -169,11 +169,11 @@ void calculaGrau (GRAFOL *grafo){
     }
 }
 
-int chaveMin(int* key, bool*arvoreMin, int numvert){
+int chaveMin(int* key, int* arvoreMin, int numvert){
     int min = INT_MAX, minimo;
 
     for(int i=0;i<numvert;i++){
-        if(arvoreMin == -1 && key[i] < min){
+        if(arvoreMin[i] == -1 && key[i] < min){
             min= key[i];
             minimo = i;     
         }
@@ -181,8 +181,7 @@ int chaveMin(int* key, bool*arvoreMin, int numvert){
     return minimo;
 }
 
-int* prim(GRAFOL* grafo, int vertFonte){
-    int arvoreMin[grafo->numvert];
+void prim(GRAFOL* grafo, int vertFonte, int* arvoreMin){
     int key[grafo->numvert];
 
     for(int i=0;i<grafo->numvert;i++){
@@ -206,9 +205,6 @@ int* prim(GRAFOL* grafo, int vertFonte){
             adj=adj->prox;
         }
     }   
-
-
-
 }
 
 int distanciaMinima(int* distancia, bool*caminhoMinimo, int numvert){
@@ -230,9 +226,7 @@ void relaxa(int atual, int adj, int peso, int*distancia, bool*caminhoMin){
     }
 }
 
-void dijkstra (GRAFOL* grafo, int vertFonte){
-    bool caminhoMin[grafo->numvert];
-    int distancia[grafo->numvert];
+void dijkstra (GRAFOL* grafo, int vertFonte, bool* caminhoMin, int* distancia){
 
     for(int i=0;i<grafo->numvert;i++){
         distancia[i] = INT_MAX;
@@ -251,21 +245,12 @@ void dijkstra (GRAFOL* grafo, int vertFonte){
             relaxa(atual, adj->vertice, adj->peso, distancia, caminhoMin);
             adj = adj->prox;
         }
-
-
    }
-
-
-
-
-
-
 }
 
-int* buscaBreadth (GRAFOL* grafo, int vertFonte){
+void buscaBreadth (GRAFOL* grafo, int vertFonte, int* distancia){
     int cor[grafo->numvert];
     int pai[grafo->numvert];
-    int distancia[grafo->numvert];
 
     for(int i=0;i<grafo->numvert;i++){
         cor[i]=0;
@@ -300,15 +285,11 @@ int* buscaBreadth (GRAFOL* grafo, int vertFonte){
         }
     cor[atual]=2;
     }
-    return distancia;
 }
 
-void buscaDepth(GRAFOL* grafo){
+void buscaDepth(GRAFOL* grafo, int* descoberta, int*finalizacao, int* pai){
     int tempo = 0;
     int cor[grafo->numvert];
-    int pai[grafo->numvert];
-    int distancia[grafo->numvert];
-    int finalizacao[grafo->numvert];
     
     for(int i=0;i<grafo->numvert;i++){
         cor[i]=0;
@@ -317,23 +298,21 @@ void buscaDepth(GRAFOL* grafo){
 
     for(int i=0;i<grafo->numvert;i++){
         if(cor[i]==0)
-            visitaDepth(grafo, i, cor, distancia, finalizacao, pai, &tempo);
+            visitaDepth(grafo, i, cor, descoberta, finalizacao, pai, &tempo);
     }
-    
-
 }
 
-void visitaDepth(GRAFOL* grafo, int i, int* cor, int*distancia, int*finalizacao, int*pai, int*tempo){
+void visitaDepth(GRAFOL* grafo, int i, int* cor, int*descoberta, int*finalizacao, int*pai, int*tempo){
     cor[i]=1;
     (*tempo)= (*tempo)+1;
-    distancia[i] = (*tempo);
+    descoberta[i] = (*tempo);
     printf("%d ", i);
     NO* adj = grafo->adjs[i]->prox;
 
     while(adj){
         if(cor[adj->vertice]==0){
             pai[adj->vertice]=i;
-            vistitaDepth(grafo, adj->vertice, cor, distancia, finalizacao);
+            visitaDepth(grafo, adj->vertice, cor, descoberta, finalizacao, pai, tempo);
         }
     }
     cor[i] = 2;
