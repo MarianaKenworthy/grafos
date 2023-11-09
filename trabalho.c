@@ -2,13 +2,15 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <limits.h>
+#include <string.h>
 #include "trabalho.h"
- 
+  
 
 GRAFOL* fromFile () {
     char filename[30];
     printf("insira o nome do arquivo onde se encontra o grafo (incluir .txt): ");
     scanf("%s", filename);
+
 
     FILE* input = fopen(filename, "r");
     if(!input){
@@ -18,7 +20,7 @@ GRAFOL* fromFile () {
 
     int numeros[3];
     char type;
-    fscanf(input, "%d%d%c%d", &numeros[0], &numeros[1], &type, &numeros[2]);
+    fscanf(input, "<%d><%d><%c><%d>", &numeros[0], &numeros[1], &type, &numeros[2]);
     fseek(input, 1, 1);
     GRAFOL* novoGrafo = malloc(sizeof(GRAFOL));
     novoGrafo->numvert =numeros[0];
@@ -26,62 +28,83 @@ GRAFOL* fromFile () {
     novoGrafo->tipo= type;
     novoGrafo->valorado=numeros[2];
 
-    novoGrafo->adjs = malloc(sizeof(NO)*(novoGrafo->numvert));
+    novoGrafo->adjs = malloc(sizeof(NO*)*(novoGrafo->numvert));
 
     for(int i = 0; i < novoGrafo->numvert; i++){
-       novoGrafo->adjs[i]->vertice = i+1;
-       novoGrafo->adjs[i]->prox = NULL;
+        novoGrafo->adjs[i] = malloc(sizeof(NO));
+        novoGrafo->adjs[i]->vertice = i+1;
+        novoGrafo->adjs[i]->prox = NULL;
     }
 
-    int aux[3];
-    NO* atual;
+    int vertex, adjacent, weight;
 
-    while (fscanf(input, "%d%d%d", &aux[0], &aux[1], &aux[2])){
-        atual = novoGrafo->adjs[aux[0]]->prox;
-        if(atual== NULL){
+    NO* atual, *antes;
+
+
+    while (fscanf(input, "\n<%d><%d>", &vertex, &adjacent)== 2){
+        atual = novoGrafo->adjs[vertex-1];
+            while(atual){
+            antes = atual;
+            atual=atual->prox;
+            }
+            if(atual==NULL){
             atual = malloc(sizeof(NO));
-            atual ->vertice = aux[1];
-            if(aux[2] = '\n')
+            atual->vertice = adjacent;
+            fscanf(input, "<%d>", &weight);
+            if(weight =='\n')
                 atual -> peso = 1;
             else {
-                atual -> peso = aux[2];
+                atual -> peso = weight;
                 fseek(input, 1, 1);
             }
             atual -> prox = NULL;
-            novoGrafo->adjs[aux[0]]->prox = atual;
-        } else 
-            atual = atual->prox;
-         
-    }
+            antes->prox = atual;
+            }
+        
+        } 
+
     printf("grafo carregado com sucesso!\n");
     fclose(input);
     return novoGrafo;
-}
+    }
 
 void toFile (GRAFOL* grafo) {
     char filename[30];
 
     printf("onde deseja salvar o grafo?\n");
-    scanf("%s\n", filename);
+    scanf("%s", filename);
 
-    FILE* output = fopen (filename, "w");
-    NO aux;
+    FILE* output = fopen (filename, "w+");
+    if(output == NULL){
+        printf("erro ao abrir o arquivo.\n");
+        exit(1);
+    }
+
+    NO* aux;
     int vertAtual;
     
-    char buffer[sizeof(int)*5];
+    char buffer1[64];
+    char buffer2[24];
+    char buffer3[10];
 
-    sprintf(buffer, "%d%d%d%d\n", grafo->numvert, grafo->numares, grafo -> tipo, grafo->valorado);
-    fwrite(buffer, sizeof(buffer), 1, output);
+    sprintf(buffer1, "<%d><%d><%c><%d>\n", grafo->numvert, grafo->numares, grafo -> tipo, grafo->valorado);
+    fwrite(buffer1, strlen(buffer1), 1, output);
 
     for (int i=0; i <grafo->numvert; i++){
-        aux = *(grafo->adjs[i]);
-        vertAtual = aux.vertice;
-        while(aux.prox){
-            fprintf(output, "%d%d", vertAtual, aux.prox->vertice);
+        aux = (grafo->adjs[i]);
+        vertAtual = aux->vertice;
+        while(aux->prox){
+            sprintf(buffer2, "<%d><%d>",vertAtual, aux->prox->vertice);
+            fwrite(buffer2, strlen(buffer2), 1, output);
+
             if(grafo->valorado == 1){
-                fprintf(output, "%d\n", aux.peso);
+                sprintf(buffer3, "<%d>\n", aux->prox->peso);
+                fwrite(buffer3, strlen(buffer3), 1, output);
+ 
             } else 
                 fputc('\n', output);
+
+            aux = aux->prox;
         }
     }
 
@@ -96,27 +119,34 @@ GRAFOL* toLista (GRAFOM* matriz){
     retorno->numares = matriz->numares;
     retorno->tipo = matriz->tipo;
     retorno->valorado = matriz->valorado;
-    retorno->adjs = malloc(sizeof(NO)*(retorno->numvert));
+    retorno->adjs = malloc(sizeof(NO*)*(retorno->numvert));
 
-    NO* aux;
+    NO* aux, *antes;
     for(int i=0; i<matriz->numvert;i++){
+        printf("%d -> ", i+1);
         aux = retorno->adjs[i];
+        antes = aux;
         aux = malloc(sizeof(NO));
         aux->vertice = i+1;
         aux->prox = NULL;
         aux->peso = 0;
-        retorno -> adjs[i] = aux;
+        retorno->adjs[i] = aux;
+        antes = aux;
         aux = aux->prox;
 
         for(int j=0; j<matriz->numvert;j++){
             if(matriz->adjs[i][j]!=0){
+                printf("%d ", j+1);
                 aux = malloc(sizeof(NO));
                 aux -> vertice = j+1;
                 aux -> peso = matriz->adjs[i][j];
                 aux -> prox = NULL;
-                aux = aux->prox;
+                antes->prox = aux;
+                antes = aux;
+                
             }
         }
+        printf("\n");
     }
     return retorno;
 }
@@ -129,6 +159,10 @@ GRAFOM* toMatriz (GRAFOL* lista){
     retorno-> tipo = lista->tipo;
     retorno->valorado = lista->valorado;
 
+    for(int i=0; i<lista->numvert+1;i++)
+        printf("%d ", i);
+    putchar('\n');
+
     retorno->adjs = malloc(sizeof(int*)*(lista->numvert));
     if(retorno->adjs){
         for(int i=0;i<lista->numvert; i++){
@@ -138,7 +172,8 @@ GRAFOM* toMatriz (GRAFOL* lista){
                     retorno->adjs[i][j]=0;
             }
         }
-    }
+    } else
+        printf("houve um erro ao tentar alocar a matriz\n");
 
     NO* aux;
     for(int i = 0; i<lista->numvert;i++){
@@ -149,25 +184,26 @@ GRAFOM* toMatriz (GRAFOL* lista){
         }
     }
 
+    for(int i = 0; i<lista->numvert;i++){
+        printf("%d ", i+1);
+        for(int j = 0; j<lista->numvert;j++)
+            printf("%d ", retorno->adjs[i][j]);
+        putchar('\n');
+    }
+
     return retorno;
 }
 
-void calculaGrau (GRAFOL *grafo){
+int calculaGrau (GRAFOM *grafo, int vertice){
+    int i = 0;
     int contador = 0;
-    NO* aux;
-    for(int i = 0; i <grafo->numvert; i++){
-        printf("vertice %d tem grau ", grafo->adjs[i]->vertice);
-        aux = (grafo->adjs[i]->prox);
 
-        if(aux){
-            contador++;
-            aux = aux->prox;
-        } else {
-            printf("%d\n", contador);
-            continue;
-        }
-    }
+    for (i = 0; i < grafo->numvert; i++)
+        contador = grafo->adjs[vertice-1][i]!= 0 ? contador + 1 : contador;
+    
+    return contador;
 }
+
 
 int chaveMin(int* key, int* arvoreMin, int numvert){
     int min = INT_MAX, minimo;
@@ -189,7 +225,7 @@ void prim(GRAFOL* grafo, int vertFonte, int* arvoreMin){
         arvoreMin[i]=-1;
     }
 
-    key[vertFonte]=0;
+    key[vertFonte-1]=0;
     int atual;
     NO* adj;
 
@@ -198,9 +234,9 @@ void prim(GRAFOL* grafo, int vertFonte, int* arvoreMin){
         adj=grafo->adjs[atual]->prox;
 
         while(adj){
-            if(adj->peso < key[adj->vertice]){
+            if(adj->peso < key[adj->vertice-1]){
                 arvoreMin[adj->vertice] = atual;
-                key[adj->vertice] = adj->peso;
+                key[adj->vertice-1] = adj->peso;
             }
             adj=adj->prox;
         }
@@ -220,9 +256,9 @@ int distanciaMinima(int* distancia, bool*caminhoMinimo, int numvert){
 }
 
 void relaxa(int atual, int adj, int peso, int*distancia, bool*caminhoMin){
-    if(distancia[adj] > distancia[atual] + peso){
-        distancia[adj] = distancia[atual] + peso;
-        caminhoMin[adj] = atual;
+    if(distancia[adj-1] > distancia[atual-1] + peso){
+        distancia[adj-1] = distancia[atual-1] + peso;
+        caminhoMin[adj-1] = atual;
     }
 }
 
@@ -240,7 +276,7 @@ void dijkstra (GRAFOL* grafo, int vertFonte, bool* caminhoMin, int* distancia){
         atual = distanciaMinima(distancia, caminhoMin, grafo->numvert);
         caminhoMin[atual] = true;
 
-        adj = grafo->adjs[atual]->prox;
+        adj = grafo->adjs[atual-1]->prox;
         while(adj){
             relaxa(atual, adj->vertice, adj->peso, distancia, caminhoMin);
             adj = adj->prox;
@@ -267,7 +303,7 @@ void buscaBreadth (GRAFOL* grafo, int vertFonte, int* distancia){
     int atual;
     NO*adj;
 
-    fila[fim]= vertFonte;
+    fila[fim]= vertFonte-1;
     fim++;
 
     while(fim != inicio){
@@ -275,11 +311,11 @@ void buscaBreadth (GRAFOL* grafo, int vertFonte, int* distancia){
         printf("%d ", atual);
         adj = grafo->adjs[atual]->prox;
         while(adj){
-            if(cor[adj->vertice]==0){
-                cor[adj->vertice]=1;
-                distancia[adj->vertice]= distancia[atual]+1;
-                pai[adj->vertice]=atual;
-                fila[fim++] = adj->vertice;
+            if(cor[adj->vertice-1]==0){
+                cor[adj->vertice-1]=1;
+                distancia[adj->vertice-1]= distancia[atual]+1;
+                pai[adj->vertice-1]=atual;
+                fila[fim++] = adj->vertice-1;
             }
             adj=adj->prox; 
         }
@@ -310,12 +346,13 @@ void visitaDepth(GRAFOL* grafo, int i, int* cor, int*descoberta, int*finalizacao
     NO* adj = grafo->adjs[i]->prox;
 
     while(adj){
-        if(cor[adj->vertice]==0){
-            pai[adj->vertice]=i;
+        if(cor[adj->vertice-1]==0){
+            pai[adj->vertice-1]=i;
             visitaDepth(grafo, adj->vertice, cor, descoberta, finalizacao, pai, tempo);
         }
     }
     cor[i] = 2;
     (*tempo) = (*tempo)+1;
     finalizacao[i]= (*tempo);
+
 }

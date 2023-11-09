@@ -2,7 +2,7 @@ typedef struct no {
     int vertice;
     int peso;
     struct no* prox;
-} NO;
+} NO; 
 
 typedef struct grafoL {
     int numvert;
@@ -20,17 +20,17 @@ typedef struct grafoM {
     int ** adjs;
 } GRAFOM;
 
-GRAFOL* fromFile (); //feito
-void toFile (GRAFOL* grafo); //feito
-GRAFOL* toLista (GRAFOM* matriz); //feito
-GRAFOM* toMatriz (GRAFOL* lista); //feito
-void calculaGrau (GRAFOL* grafo); //feito
-int chaveMin(int* key, bool*arvoreMin, int numvert)
-int* prim(GRAFOL* grafo, int vertFonte); //feito conferir retorno
+GRAFOL* fromFile (); 
+void toFile (GRAFOL* grafo); 
+GRAFOL* toLista (GRAFOM* matriz);
+GRAFOM* toMatriz (GRAFOL* lista); 
+int calculaGrau (GRAFOM *grafo, int vertice); 
+int chaveMin(int* key, int *arvoreMin, int numvert);
+void prim(GRAFOL* grafo, int vertFonte, int* arvoreMin); 
 int distanciaMinima(int* distancia, bool*caminhoMinimo, int numvert);
 void relaxa(int atual, int adj, int peso, int*distancia, bool*caminhoMin);
-void dijkstra (GRAFOL* grafo, int vertFonte); //feito rever retorno
-int* buscaBreadth (GRAFOL* grafo, int vertFonte); //feito rever retorno
-void buscaDepth(GRAFOL* grafo); //feito falta retorno
-void visitaDepth(GRAFOL* grafo, int i, int* cor, int*distancia, int*finalizacao, int*pai, int*tempo);
+void dijkstra (GRAFOL* grafo, int vertFonte, bool* caminhoMin, int* distancia);
+void buscaBreadth (GRAFOL* grafo, int vertFonte, int* distancia); 
+void buscaDepth(GRAFOL* grafo, int* descoberta, int*finalizacao, int* pai); 
+void visitaDepth(GRAFOL* grafo, int i, int* cor, int*descoberta, int*finalizacao, int*pai, int*tempo);
 
